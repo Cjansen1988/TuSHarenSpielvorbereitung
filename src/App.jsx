@@ -156,6 +156,7 @@ const emptyGame = {
   formation: "4-4-2",
   matchSquad: [],
   lineup: {},
+  benchNumbers: {},
   date: "",
   kickoff: "",
   meetingTime: "",
@@ -417,9 +418,14 @@ function GameTab({ squad, game, setGame, matches, setMatches }) {
   const lineup = game.lineup || {};
   const assignedIds = Object.values(lineup).map((v) => v?.playerId).filter(Boolean);
   const bench = squad.filter((p) => matchSquad.includes(p.id) && !assignedIds.includes(p.id));
+  const benchNumbers = game.benchNumbers || {};
   const report = game.report || emptyGame.report;
 
   const getPlayer = (id) => squad.find((p) => p.id === id);
+
+  const setBenchNumber = (playerId, value) => {
+    setGame({ ...game, benchNumbers: { ...benchNumbers, [playerId]: value } });
+  };
 
   const toggleMatchSquad = (id) => {
     const next = matchSquad.includes(id)
@@ -556,16 +562,17 @@ function GameTab({ squad, game, setGame, matches, setMatches }) {
     Object.values(lineup).forEach((entry) => {
       if (entry?.playerId) lineupNumbers[entry.playerId] = entry.number;
     });
+    const allNumbers = { ...benchNumbers, ...lineupNumbers };
 
     const kaderLines = matchSquad
       .map((id) => getPlayer(id))
       .filter(Boolean)
       .sort((a, b) => {
-        const na = Number(lineupNumbers[a.id] ?? a.number) || 99;
-        const nb = Number(lineupNumbers[b.id] ?? b.number) || 99;
+        const na = Number(allNumbers[a.id] ?? a.number) || 99;
+        const nb = Number(allNumbers[b.id] ?? b.number) || 99;
         return na - nb;
       })
-      .map((p) => `${lineupNumbers[p.id] ?? p.number ?? "–"} – ${p.name}`)
+      .map((p) => `${allNumbers[p.id] ?? p.number ?? "–"} – ${p.name}`)
       .join("\n");
 
     const lines = [
@@ -730,8 +737,14 @@ function GameTab({ squad, game, setGame, matches, setMatches }) {
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {bench.map((p) => (
-                    <span key={p.id} className="text-xs bg-[#122e23] border border-[#254536] text-stone-300 px-2 py-1 rounded-full">
-                      {p.number ? `#${p.number} ` : ""}{p.name}
+                    <span key={p.id} className="flex items-center gap-1 text-xs bg-[#122e23] border border-[#254536] text-stone-300 pl-1 pr-2 py-1 rounded-full">
+                      <span className="text-stone-400">#</span>
+                      <input
+                        className="w-7 bg-[#0f2a20] border border-[#2a4a3c] rounded text-center text-stone-100 py-0.5"
+                        value={benchNumbers[p.id] ?? p.number ?? ""}
+                        onChange={(e) => setBenchNumber(p.id, e.target.value)}
+                      />
+                      <span>{p.name}</span>
                     </span>
                   ))}
                 </div>
