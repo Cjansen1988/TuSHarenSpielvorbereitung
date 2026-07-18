@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Nur eingeloggte Nutzer mit einer der beiden hinterlegten E-Mail-Adressen
+    // dürfen die Daten der Spielvorbereitungs-App lesen und schreiben.
+    // WICHTIG: Ersetzt die Beispiel-E-Mails durch eure beiden echten Adressen.
+    match /tusharen2/{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email in [
+          "trainer1@example.com",
+          "trainer2@example.com"
+        ];
+    }
+
+    // Eure Kegel-App liegt vermutlich in anderen Collections/Pfaden
+    // und ist von dieser Regel nicht betroffen - diese Datei betrifft
+    // nur "match"-Blöcke, die ihr selbst definiert. Falls die Kegel-App
+    // eigene Regeln in derselben firestore.rules-Datei hat, fügt diesen
+    // "match /tusharen2/{document=**} { ... }"-Block einfach als
+    // zusätzlichen Block in eure bestehende Regeldatei ein.
+  }
+}
